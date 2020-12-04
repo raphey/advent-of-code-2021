@@ -21,8 +21,8 @@ def part_2(raw_input_map):
     product = 1
     parsed_input_map = raw_input_map.split('\n')
     w = len(parsed_input_map[0])
-    for j, k in [(1, 1), (3, 1), (5, 1), (7, 1), (0.5, 2)]:
-        product *= sum(parsed_input_map[i][int(j * i) % w] == '#'
+    for j, k in [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]:
+        product *= sum(parsed_input_map[i][j * i // k % w] == '#'
                        for i in range(0, len(parsed_input_map), k))
         print(product)
     return product
