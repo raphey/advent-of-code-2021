@@ -1006,23 +1006,18 @@ INPUT = """4-6 b: bbbdbtbbbj
 parser = re.compile(r'(\d+)-(\d+) ([a-z]): ([a-z]+)')
 
 
-def generate_regex_captures(string, regex):
+def get_regex_captures(string, regex):
     if 'parser' not in globals():
         global parser
         parser = re.compile(regex)
-    m = parser.match(string)
-    i = 1
-    while True:
-        try:
-            yield m.group(i)
-            i += 1
-        except IndexError:
-            break
+    m = parser.search(string)
+    return m.groups()
+
 
 def part_1():
     legit_count = 0
     for line in INPUT.split('\n'):
-        low_count, high_count, char, password = generate_regex_captures(line, r'(\d+)-(\d+) ([a-z]): ([a-z]+)')
+        low_count, high_count, char, password = get_regex_captures(line, r'(\d+)-(\d+) ([a-z]): ([a-z]+)')
         if int(low_count) <= password.count(char) <= int(high_count):
             legit_count += 1
     print(legit_count)
@@ -1031,7 +1026,7 @@ def part_1():
 def part_2():
     legit_count = 0
     for line in INPUT.split('\n'):
-        i, j, char, password = generate_regex_captures(line, r'(\d+)-(\d+) ([a-z]): ([a-z]+)')
+        i, j, char, password = get_regex_captures(line, r'(\d+)-(\d+) ([a-z]): ([a-z]+)')
         if (password[int(i) - 1] == char) !=  (password[int(j) - 1] == char):
             legit_count += 1
     print(legit_count)
