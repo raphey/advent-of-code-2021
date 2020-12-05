@@ -29,6 +29,7 @@ def gen_raw_items(raw_input, split_token='\n'):
 
 def gen_parsed(raw_input):
     for raw_item in gen_raw_items(raw_input):
+        if not raw_item: continue
         binary = my_char_trans(raw_item, 'FBLR', '0101')
         fbs, lrs = binary[:7], binary[7:]
         yield int(fbs, 2), int(lrs, 2)
