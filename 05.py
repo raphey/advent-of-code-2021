@@ -1,4 +1,19 @@
+import re
 from inputs.input_05 import sample_input, main_input
+
+
+def generate_regex_captures(string, regex):
+    if 'parser' not in globals():
+        global parser
+        parser = re.compile(regex)
+    m = parser.match(string)
+    i = 1
+    while True:
+        try:
+            yield m.group(i)
+            i += 1
+        except IndexError:
+            break
 
 
 def generate_parsed_input(raw_input):
