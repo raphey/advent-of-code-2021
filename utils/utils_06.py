@@ -1,22 +1,22 @@
 import re
 
 
-def my_regex(regex):
+def regex(r_string):
     if 'parser' not in globals():
         global parser
-        parser = re.compile(regex)
+        parser = re.compile(r_string)
     return parser
 
 
-def my_char_trans(string, input_chars, output_chars):
+def translate(string, input_chars, output_chars):
     if 'trans_map' not in globals():
         global trans_map
         trans_map = str.maketrans(input_chars, output_chars)
     return string.translate(trans_map)
 
 
-def get_regex_captures(string, regex):
-    m = my_regex(regex).search(string)
+def get_regex_captures(string, r_string):
+    m = regex(r_string).search(string)
     return m.groups()
 
 
