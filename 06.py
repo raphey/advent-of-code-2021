@@ -15,9 +15,7 @@ def part_1(raw_input):
 def part_2(raw_input):
     answer = 0
     for x in gen_parsed(raw_input):
-        y = set(x[0])
-        for z in x[1:]:
-            y = y.intersection(set(z))
+        y = set.intersection(*(set(p) for p in x))
         answer += len(y)
     print(f'Part2: {answer}')
 
