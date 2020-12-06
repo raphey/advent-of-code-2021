@@ -3,6 +3,7 @@ from inputs.input_06 import sample_input, main_input
 
 
 def gen_parsed(raw_input):
+    # Reminder, no solving, just parsing--works for part 1 and part 2
     for raw_item in gen_raw_items(raw_input, split_token='\n\n'):
         yield set(''.join(raw_item.split('\n')))
 

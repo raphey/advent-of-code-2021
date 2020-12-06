@@ -21,6 +21,5 @@ def get_regex_captures(string, r_string):
 
 
 def gen_raw_items(raw_input, split_token='\n'):
-    for raw_item in raw_input.split(split_token):
-        if raw_item:    # watch out for leading/trailing empty strings
-            yield raw_item
+    for raw_item in raw_input.strip().split(split_token):
+        yield raw_item.strip()
