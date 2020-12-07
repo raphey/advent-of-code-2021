@@ -11,7 +11,7 @@ def gen_parsed(raw_input):
         # vibrant plum bags contain 5 faded blue bags, 6 dotted black bags.
         capture_1 = get_regex_captures(string=raw_item, r_string=r'(.*?) bags contain (.*?) bags?\.')
         if 'no other' in capture_1:
-            yield capture_1[0], []
+            yield capture_1[0], {}
         capture_2_matches = pattern_2.findall(capture_1[1])
         yield capture_1[0], {type: count for count, type in capture_2_matches}
 
@@ -25,8 +25,7 @@ def contains_shiny_gold(rules, bag):
 
 
 def part_1(raw_input):
-    answer = 0
-    all_rules = dict()
+    all_rules = {}
     for x in gen_parsed(raw_input):
         all_rules[x[0]] = x[1]
     answer = len([b for b in all_rules if contains_shiny_gold(all_rules, b)])
@@ -49,8 +48,7 @@ def contained_bag_count(rules, bag):
 
 
 def part_2(raw_input):
-    answer = 0
-    all_rules = dict()
+    all_rules = {}
     for x in gen_parsed(raw_input):
         all_rules[x[0]] = x[1]
     answer = contained_bag_count(all_rules, 'shiny gold')
