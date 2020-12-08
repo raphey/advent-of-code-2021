@@ -34,18 +34,21 @@ class GameConsole(object):
     def nop(self, _):
         self.i += 1
 
-    def should_continue(self):
-        return self.i not in self.visited
+    def should_terminate(self):
+        return self.i in self.visited
 
     def execute_one_command(self):
         self.visited.add(self.i)
         command, amount = self.commands[self.i]
         self.command_dict[command](amount)
 
+    def get_exit_code(self):
+        return 0
+
     def execute(self):
-        while self.should_continue():
+        while not self.should_terminate():
             self.execute_one_command()
-        print(f'Finished executing, accumulator is {self.accumulator}')
+        return self.get_exit_code()
 
 
 class TweakedGameConsole(GameConsole):
@@ -53,8 +56,8 @@ class TweakedGameConsole(GameConsole):
         super(TweakedGameConsole, self).__init__(commands)
         self.tweak_j = tweak_j
 
-    def should_continue(self):
-        return self.i not in self.visited and self.i < len(self.commands)
+    def should_terminate(self):
+        return self.i in self.visited or self.i >= len(self.commands)
 
     def execute_one_command(self):
         self.visited.add(self.i)
@@ -66,18 +69,16 @@ class TweakedGameConsole(GameConsole):
                 command = 'jmp'
         self.command_dict[command](amount)
 
-    def execute(self):
-        while self.should_continue():
-            self.execute_one_command()
-        if self.i in self.visited:
-            return 1
-        return 0
+    def get_exit_code(self):
+        return 0 if self.i >= len(self.commands) else 1
 
 
 def part_1(raw_input):
     all_instructions = list(gen_parsed(raw_input))
     gc = GameConsole(all_instructions)
     gc.execute()
+    answer = gc.accumulator
+    print(f'Part1: {answer}')
 
 
 def part_2(raw_input):
