@@ -1,7 +1,9 @@
 from utils.utils_10 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
 from utils.utils_10 import GameConsole, TweakedGameConsole
+from utils.utils_11 import memo
 from inputs.input_10 import main_input
 
+from collections import Counter
 from itertools import combinations
 import re
 
@@ -61,50 +63,37 @@ sample_input_1 = """28
 
 def part_1(raw_input):
     parsed = get_parsed(raw_input)
-    sorted_parsed = sorted(parsed)
-    sorted_parsed = [0] + sorted_parsed + [sorted_parsed[-1] + 3]
-    ones = 0
-    threes = 0
-    for i in range(len(sorted_parsed) - 1):
-        if sorted_parsed[i + 1] - sorted_parsed[i] == 1:
-            ones += 1
-        elif sorted_parsed[i + 1] - sorted_parsed[i] == 3:
-            threes += 1
-        else:
-            print(sorted_parsed[i-1:i+2])
-            quit()
-    answer = ones * threes
-    print(ones, threes)
+    sp = sorted(parsed)
+    sp = [0] + sp + [sp[-1] + 3]
+    diffs = [sp[i] - sp[i - 1] for i in range(1, len(sp))]
+    counts = Counter(diffs)
+    answer = counts[1] * counts[3]
     print(f'Part1: {answer}')
-
-
-sample_input_2 = sample_input_1
 
 
 def part_2(raw_input):
     parsed = get_parsed(raw_input)
-    sorted_parsed = sorted(parsed)
-    sorted_parsed = [0] + sorted_parsed + [sorted_parsed[-1] + 3]
-    adapter_bools = [i in sorted_parsed for i in range(sorted_parsed[-1])]
-    rec_memo = {}
+    da = max(parsed) + 3
+    adapters = set([0] + parsed + [da])
+
+    @memo
     def rec(target):
         if target == 0:
             return 1
-        if target in rec_memo:
-            return rec_memo[target]
         count = 0
         for i in range(1, 4):
-            if adapter_bools[target - i]:
+            if target - i in adapters:
                 count += rec(target - i)
-        rec_memo[target] = count
         return count
 
-    answer = rec(sorted_parsed[-1])
+    answer = rec(da)
     print(f'Part2: {answer}')
 
 
-# part_1(sample_input_0)
-# part_1(main_input)
+part_1(sample_input_0)
+part_1(sample_input_1)
+part_1(main_input)
 
 part_2(sample_input_0)
+part_2(sample_input_1)
 part_2(main_input)
