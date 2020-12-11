@@ -63,7 +63,6 @@ class GameConsole(object):
         self.accumulator = 0
         self.i = 0
         self.visited = set()
-        self.finished = False
         self.command_dict = {
             'acc': self.acc,
             'jmp': self.jmp,
@@ -117,3 +116,9 @@ class TweakedGameConsole(GameConsole):
 
     def get_exit_code(self):
         return 0 if self.i >= len(self.commands) else 1
+
+
+class GameConsoleSwitch(object):
+    def __init__(self, commands):
+        super(GameConsoleSwitch, self).__init__(commands)
+
