@@ -23,21 +23,6 @@ bus_input = "13,x,x,41,x,x,x,x,x,x,x,x,x,997,x,x,x,x,x,x,x,23,x,x,x,x,x,x,x,x,x,
 buses = [int(b) for b in bus_input.split(',') if b != 'x']
 
 
-def get_part2_bus_input():
-    new_input = []
-    for i, b_str in enumerate(bus_input.split(',')):
-        try:
-            b = int(b_str)
-            new_input.append((b, (b - i)))
-        except ValueError:
-            continue
-    return new_input
-
-
-print(get_part2_bus_input())
-
-
-
 def part_1():
     min_w = float('inf')
     min_b = -1
@@ -50,26 +35,32 @@ def part_1():
     print(f'Part1: {answer}')
 
 
+def get_part2_bus_input():
+    new_input = []
+    for i, b_str in enumerate(bus_input.split(',')):
+        try:
+            b = int(b_str)
+            new_input.append((b, (b - i) % b))
+        except ValueError:
+            continue
+    return new_input
+
+
 def crt_pair(a, b):
-    print(a, b)
     p1, r1 = a
     p2, r2 = b
-    for x in range(r1, 2 * p1 * p2, p1):
+    for x in range(r1, p1 * p2 + r1, p1):
         if x % p2 == r2:
-            assert(x % p1 == r1)
-            return p1 * p2, x % (p1 * p2)
+            return p1 * p2, x
 
 
 def part_2():
-    original_buses = get_part2_bus_input()
-    buses = [(p, r % p) for p, r in original_buses]
+    buses = get_part2_bus_input()
     current = buses[0]
-    print(current)
     for i in range(1, len(buses)):
         current = crt_pair(current, buses[i])
-        print(current)
     answer = current[1]
-    for p, r in original_buses:
+    for p, r in buses:
         assert(answer % p == r % p)
     print(f'Part2: {answer}')
 
