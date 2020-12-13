@@ -25,16 +25,10 @@ F11"""
 
 
 def part_1(raw_input):
-    x = 0
-    y = 0
+    x = y = 0
     dirs = [(1, 0), (0, -1), (-1, 0), (0, 1)]
     dir_i = 0
-    card_dict = {
-        'N': (0, 1),
-        'E': (1, 0),
-        'S': (0, -1),
-        'W': (-1, 0)
-    }
+    card_dict = dict(zip('ESWN', dirs))
     parsed = get_parsed(raw_input)
     for cmd, amt in parsed:
         if cmd in card_dict:
@@ -51,21 +45,11 @@ def part_1(raw_input):
     print(f'Part1: {answer}')
 
 
-def get_rotated_wps(x, y, wpx, wpy, dir, amt):
-    if dir == 'L':
-        return get_rotated_wps(x, y, wpx, wpy, 'R', -amt)
+def get_rotated_wps(wpx, wpy, amt):
     r_turns = (amt // 90) % 4
-    if r_turns == 0:
-        return wpx, wpy
-
-    if r_turns == 2:
-        return -wpx, -wpy
-    if r_turns == 1:
-        return wpy, -wpx
-    if r_turns == 3:
-        return -wpy, wpx
-    else:
-        print(r_turns)
+    for _ in range(r_turns):
+        wpx, wpy = wpy, -wpx
+    return wpx, wpy
 
 
 def part_2(raw_input):
@@ -73,8 +57,6 @@ def part_2(raw_input):
     y = 0
     wpx = 10
     wpy = 1
-    dirs = [(1, 0), (0, -1), (-1, 0), (0, 1)]
-    dir_i = 0
     card_dict = {
         'N': (0, 1),
         'E': (1, 0),
@@ -87,13 +69,13 @@ def part_2(raw_input):
             wpx += amt * card_dict[cmd][0]
             wpy += amt * card_dict[cmd][1]
         elif cmd == 'R':
-            wpx, wpy = get_rotated_wps(x, y, wpx, wpy, 'R', amt)
+            wpx, wpy = get_rotated_wps(wpx, wpy, amt)
         elif cmd == 'L':
-            wpx, wpy = get_rotated_wps(x, y, wpx, wpy, 'L', amt)
+            wpx, wpy = get_rotated_wps(wpx, wpy, -amt)
         elif cmd == 'F':
             x += amt * wpx
             y += amt * wpy
-        print(x, y, wpx, wpy)
+        # print(x, y, wpx, wpy)
     answer = abs(x) + abs(y)
     print(f'Part2: {answer}')
 

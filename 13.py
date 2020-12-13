@@ -1,6 +1,6 @@
-from utils.utils_12 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
-from utils.utils_12 import GameConsole, TweakedGameConsole, memo
-from inputs.input_12 import main_input
+from utils.utils_13 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
+from utils.utils_13 import GameConsole, TweakedGameConsole, memo
+from inputs.input_13 import main_input
 
 from itertools import combinations
 import copy
@@ -15,29 +15,65 @@ def get_parsed(raw_input):
     return parsed
 
 
-sample_input_0 = """"""
+t0 = 1000390
+# t0 = 939
+bus_input = "13,x,x,41,x,x,x,x,x,x,x,x,x,997,x,x,x,x,x,x,x,23,x,x,x,x,x,x,x,x,x,x,19,x,x,x,x,x,x,x,x,x,29,x,619,x,x,x,x,x,37,x,x,x,x,x,x,x,x,x,x,17"
+# bus_input = "7,13,x,x,59,x,31,19"
 
-# sample_input_1 = """"""
+buses = [int(b) for b in bus_input.split(',') if b != 'x']
 
 
-def part_1(raw_input):
-    parsed = get_parsed(raw_input)
-    for x in parsed:
-        pass
-    answer = 0
+def get_part2_bus_input():
+    new_input = []
+    for i, b_str in enumerate(bus_input.split(',')):
+        try:
+            b = int(b_str)
+            new_input.append((b, (b - i)))
+        except ValueError:
+            continue
+    return new_input
+
+
+print(get_part2_bus_input())
+
+
+
+def part_1():
+    min_w = float('inf')
+    min_b = -1
+    for b in buses:
+        w = b - (t0 % b)
+        if w < min_w:
+            min_w = w
+            min_b = b
+    answer = min_w * min_b
     print(f'Part1: {answer}')
 
 
-def part_2(raw_input):
-    parsed = get_parsed(raw_input)
-    for x in parsed:
-        pass
-    answer = 0
+def crt_pair(a, b):
+    print(a, b)
+    p1, r1 = a
+    p2, r2 = b
+    for x in range(r1, 2 * p1 * p2, p1):
+        if x % p2 == r2:
+            assert(x % p1 == r1)
+            return p1 * p2, x % (p1 * p2)
+
+
+def part_2():
+    original_buses = get_part2_bus_input()
+    buses = [(p, r % p) for p, r in original_buses]
+    current = buses[0]
+    print(current)
+    for i in range(1, len(buses)):
+        current = crt_pair(current, buses[i])
+        print(current)
+    answer = current[1]
+    for p, r in original_buses:
+        assert(answer % p == r % p)
     print(f'Part2: {answer}')
 
 
-part_1(sample_input_0)
-# part_1(main_input)
+part_1()
 
-# part_2(sample_input_0)
-# part_2(main_input)
+part_2()
