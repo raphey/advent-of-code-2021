@@ -1,118 +1,146 @@
-from utils.utils_15 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
-from utils.utils_15 import GameConsole, TweakedGameConsole, memo
-from inputs.input_16 import main_input
+from utils.utils_17 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
+from utils.utils_17 import GameConsole, TweakedGameConsole, memo
+from inputs.input_17 import main_input
 
-from itertools import combinations
+from itertools import combinations, product
 import copy
 import re
 from collections import Counter
 
 
 def get_parsed(raw_input):
-    sections = get_raw_items(raw_input, split_token='\n\n')
-    # section 0
-    rules = {}
-    for line in sections[0].split('\n'):
-        search_results = get_regex_search(line, r'(.*): (\d+)\-(\d+) or (\d+)\-(\d+)')
-        field = search_results[0]
-        lb1, ub1, lb2, ub2 = (int(x) for x in search_results[1:])
-        rules[field] = ((lb1, ub1), (lb2, ub2))
-    # section 1
-    section_1 = get_raw_items(sections[1], split_token='\n')[1]
-    my_ticket = [int(x) for x in section_1.split(',')]
-    # section 2
-    section_2 = get_raw_items(sections[2], split_token='\n')[1:]
-    other_tickets = [[int(x) for x in line.split(',')] for line in section_2]
-
-    return rules, my_ticket, other_tickets
+    parsed = []
+    for raw_item in get_raw_items(raw_input, split_token='\n'):
+        parsed.append([int(c == '#') for c in raw_item])
+    return parsed
 
 
+sample_input_0 = """.#.
+..#
+###"""
 
-sample_input_0 = """class: 1-3 or 5-7
-row: 6-11 or 33-44
-seat: 13-40 or 45-50
+main_input = """.......#
+....#...
+...###.#
+#...###.
+....##..
+##.#..#.
+###.#.#.
+....#..."""
 
-your ticket:
-7,1,14
 
-nearby tickets:
-7,3,47
-40,4,50
-55,2,20
-38,6,12"""
+sample_input_1 = """"""
 
-sample_input_1 = """class: 0-1 or 4-19
-row: 0-5 or 8-19
-seat: 0-13 or 16-19
 
-your ticket:
-11,12,13
+def pprint_2d(arr):
+    print()
+    for row in arr:
+        print(row)
 
-nearby tickets:
-3,9,18
-15,1,5
-5,14,9"""
+
+@memo
+def get_neighbors(i, j, k, i_max, j_max, k_max):
+    neighbors = []
+    for di, dj, dk in product(*[(-1, 0, 1)] * 3):
+        if all(dq == 0 for dq in [di, dj, dk]):
+            continue
+        ii, jj, kk = i + di, j + dj, k + dk
+        if any(q >= q_max for q, q_max in zip([ii, jj, kk], [i_max, j_max, k_max])):
+            continue
+        if any(q < 0 for q in (ii, jj, kk)):
+            continue
+        neighbors.append((ii, jj, kk))
+    return neighbors
+
+
+@memo
+def get_neighbors_4d(i, j, k, l, i_max, j_max, k_max, l_max):
+    neighbors = []
+    for di, dj, dk, dl in product(*[(-1, 0, 1)] * 4):
+        if all(dq == 0 for dq in [di, dj, dk, dl]):
+            continue
+        ii, jj, kk, ll = i + di, j + dj, k + dk, l + dl
+        if any(q >= q_max for q, q_max in zip([ii, jj, kk, ll], [i_max, j_max, k_max, l_max])):
+            continue
+        if any(q < 0 for q in (ii, jj, kk, ll)):
+            continue
+        neighbors.append((ii, jj, kk, ll))
+    return neighbors
+
+
+# print(get_neighbors(2, 3, 4, 10, 10, 10))
+
+def generate_coords(arr):
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            for k in range(len(arr[0][0])):
+                yield i, j, k
+
+
+def generate_coords_4d(arr):
+    for i in range(len(arr)):
+        for j in range(len(arr[0])):
+            for k in range(len(arr[0][0])):
+                for l in range(len(arr[0][0][0])):
+                    yield i, j, k, l
 
 
 def part_1(raw_input):
-    rules, my_ticket, other_tickets = get_parsed(raw_input)
-    all_bounds = []
-    for (lb1, ub1), (lb2, ub2) in rules.values():
-        all_bounds.append((lb1, ub1))
-        all_bounds.append((lb2, ub2))
-    answer = 0
-    for t in other_tickets:
-        for x in t:
-            if not any(lb <= x <= ub for (lb, ub) in all_bounds):
-                answer += x
+    parsed = get_parsed(raw_input)
+    size = 50
+    m = size // 2
+    arr = [[[0] * size for _ in range(size)] for _ in range(size)]
+    for i in range(len(parsed)):
+        for j in range(len(parsed[0])):
+            arr[m][m + i][m + j] = parsed[i][j]
+    for z in range(6):
+        print(z)
+        new_arr = copy.deepcopy(arr)
+        for i, j, k in generate_coords(arr):
+            neighbor_count = sum(arr[ii][jj][kk] for ii, jj, kk in get_neighbors(i, j, k, size, size, size))
+            active = arr[i][j][k]
+            if active:
+                if neighbor_count in (2, 3):
+                    new_arr[i][j][k] = 1
+                else:
+                    new_arr[i][j][k] = 0
+
+            if not active and neighbor_count == 3:
+                new_arr[i][j][k] = 1
+        arr = new_arr
+    answer = sum(arr[i][j][k] for i, j, k in generate_coords(arr))
     print(f'Part1: {answer}')
 
 
-def is_valid(ticket, all_bounds):
-    for x in ticket:
-        if not any(lb <= x <= ub for (lb, ub) in all_bounds):
-            return False
-    return True
-
-
 def part_2(raw_input):
-    rules, my_ticket, other_tickets = get_parsed(raw_input)
-    all_bounds = []
-    for (lb1, ub1), (lb2, ub2) in rules.values():
-        all_bounds.append((lb1, ub1))
-        all_bounds.append((lb2, ub2))
-    valid_tickets = [my_ticket] + [t for t in other_tickets if is_valid(t, all_bounds)]
-    all_possible_fields = []
-    for i, fvs in enumerate(zip(*valid_tickets)):
-        possible_fields = []
-        for field, ((lb1, ub1), (lb2, ub2)) in rules.items():
-            if all(((lb1 <= fv <= ub1) or (lb2 <= fv <= ub2)) for fv in fvs):
-                possible_fields.append(field)
-        all_possible_fields.append(possible_fields)
+    parsed = get_parsed(raw_input)
+    size = 22
+    m = size // 2
+    arr = [[[[0] * size for _ in range(size)] for _ in range(size)] for _ in range(size)]
+    for i in range(len(parsed)):
+        for j in range(len(parsed[0])):
+            arr[m][m][m - 4 + i][m - 4 + j] = parsed[i][j]
+    for z in range(6):
+        print(z)
+        new_arr = copy.deepcopy(arr)
+        for i, j, k, l in generate_coords_4d(arr):
+            neighbor_count = sum(arr[ii][jj][kk][ll] for ii, jj, kk, ll in get_neighbors_4d(i, j, k, l, size, size, size, size))
+            active = arr[i][j][k][l]
+            if active:
+                if neighbor_count in (2, 3):
+                    new_arr[i][j][k][l] = 1
+                else:
+                    new_arr[i][j][k][l] = 0
 
-    finalized_assignments = {}
-
-    while len(finalized_assignments) < len(rules):
-        for i, possible_fields in enumerate(all_possible_fields):
-            if len(possible_fields) == 1:
-                field = possible_fields[0]
-                finalized_assignments[field] = i
-                for possible_fields in all_possible_fields:
-                    try:
-                        possible_fields.remove(field)
-                    except ValueError:
-                        pass
-                continue
-    print(finalized_assignments)
-    answer = 1
-    for field, index in finalized_assignments.items():
-        if field.startswith('departure'):
-            answer *= my_ticket[index]
+            if not active and neighbor_count == 3:
+                new_arr[i][j][k][l] = 1
+        arr = new_arr
+    answer = sum(arr[i][j][k][l] for i, j, k, l in generate_coords_4d(arr))
     print(f'Part2: {answer}')
 
 
 # part_1(sample_input_0)
 # part_1(main_input)
 
-part_2(sample_input_1)
+part_2(sample_input_0)
 part_2(main_input)
