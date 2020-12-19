@@ -29,6 +29,7 @@ def memo(f):
 
 parser = {}
 
+
 def regex(r_string):
     if r_string not in parser:
         parsed = re.compile(r_string)
