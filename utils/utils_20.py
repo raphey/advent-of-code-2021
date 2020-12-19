@@ -27,11 +27,13 @@ def memo(f):
     return _f
 
 
+parser = {}
+
 def regex(r_string):
-    if 'parser' not in globals():
-        global parser
-        parser = re.compile(r_string)
-    return parser
+    if r_string not in parser:
+        parsed = re.compile(r_string)
+        parser[r_string] = parsed
+    return parser[r_string]
 
 
 def translate(string, input_chars, output_chars):

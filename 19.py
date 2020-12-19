@@ -106,7 +106,7 @@ def get_string_combinations(string_tuples):
     # print('get_string_combinations')
     # print(string_tuples)
     # print(tuple(''.join(x) for x in product(*string_tuples)))
-    return tuple(''.join(x) for x in product(*string_tuples))
+    return set(''.join(x) for x in product(*string_tuples))
 
 
 string_validity = dict()
@@ -134,16 +134,16 @@ def get_string_combinations_2(string_tuples, messages, max_length=88):
 
 
 @memo
-def get_string_set(rules, i, messages):
+def get_string_set(rules, i):
     # print(i, type(i))
     if type(rules[i]) is str:
-        return set(rules[i])
+        return {rules[i]}
     if type(rules[i][0]) is int:    # concat case
-        return set(get_string_combinations([get_string_set(rules, x) for x in rules[i]]), messages)
+        return set(get_string_combinations([get_string_set(rules, x) for x in rules[i]]))
     # pipe case
     # print('pipe case')
-    x = set(get_string_combinations([get_string_set(rules, x) for x in rules[i][0]]), messages)
-    y = set(get_string_combinations([get_string_set(rules, x) for x in rules[i][1]]), messages)
+    x = set(get_string_combinations([get_string_set(rules, x) for x in rules[i][0]]))
+    y = set(get_string_combinations([get_string_set(rules, x) for x in rules[i][1]]))
     return x | y
     # print('*!@#*$!@*$')
     # print(set.union(set(get_string_combinations([get_string_set(rules, x) for x in rules[i][0]])),
@@ -201,7 +201,7 @@ def alt_get_parsed_2(raw_input):
             rule_indices = tuple(int(p) for p in rest.split(' '))
             rule_dict[rule_num] = rule_indices
     split_messages = get_raw_items(messages, split_token='\n')
-    rule_list = [None] * (10 * len(rule_dict))
+    rule_list = [None] * (max(k for k in (rule_dict)) + 1)
     for k, v in rule_dict.items():
         rule_list[k] = v
     return tuple(rule_list), tuple(split_messages)
@@ -332,20 +332,70 @@ def part_1(raw_input):
     print(f'Part1: {answer}')
 
 
-MAX_DEPTH = 5
+MAX_DEPTH = 20
 
 
 def part_2(raw_input):
     rule_list, messages = alt_get_parsed_2(raw_input)
-    # for i, rule in enumerate(rule_list):
-    #     print(i, rule)
     answer = 0
-    z = get_string_set_2(rule_list, 0, 0, messages)
-    print(f'done getting_string_set, length {len(z)}')
+    second_look_messages = []
     for m in messages:
-        if m in get_string_set_2(rule_list, 0, 0, messages):
+        if m in get_string_set(rule_list, 0):
             answer += 1
+        else:
+            second_look_messages.append(m)
+    print(answer, len(messages), len(second_look_messages))
+    rule_list = list(rule_list)
+
+    rule_list.append('(.*)')
+    # rule_list.append('(.*?)')
+    # rule_list[8] = (42, len(rule_list) - 2)
+    rule_list[8] = (42, len(rule_list) - 1)
+    rule_list[11] = (42, len(rule_list) - 1, 31)    # always comes after 8
+    rule_list = tuple(rule_list)
+    strings_31 = get_string_set_2(rule_list, 31, 0, messages)
+    strings_42 = get_string_set_2(rule_list, 42, 0, messages)
+    print(strings_42)
+    print(strings_31)
+    q = 8
+    # strings_3142 = get_string_combinations((strings_31, strings_42))
+    # strings_4242 = get_string_combinations((strings_42, strings_42))
+    # print(len(strings_3142))
+    x = get_string_set(rule_list, 0)
+    # for z in x:
+    #     print(z)
+
+    for i, m in enumerate(second_look_messages):
+        print()
+        print(i, m, answer)
+        for reg in x:
+            try:
+                part_8, part_11 = get_regex_search(m, '^' + reg + '$')  # ah, what if there are multiple match divisions?
+                if len(part_8) % q or len(part_11) % q:
+                    # print('length check continue')
+                    continue
+                if part_8 and any(part_8[i:i+q] not in strings_42 for i in range(0, len(part_8), q)):
+                    # print('not in str42 continue')
+                    continue
+                # print('made it through part_8')
+                if not part_11:
+                    answer += 1
+                    break
+                chunks = [part_11[i: i + q] for i in range(0, len(part_11), q)]
+                if len(chunks) % 2:
+                    continue
+                d = len(chunks) // 2
+                h1, h2 = chunks[:d], chunks[d:]
+                if any(s not in strings_42 for s in h1) or any(s not in strings_31 for s in h2):
+                    continue
+                answer += 1
+                break
+                # print('parts:', part_8, part_11)
+            except AttributeError:
+                continue
+
     print(f'Part2: {answer}')
+
 
 
 # part_1(sample_input_0)
@@ -353,6 +403,6 @@ def part_2(raw_input):
 
 # part_2(sample_input_0)
 # part_2(sample_input_1)
-# part_2(sample_input_2)
-# part_2(main_input)
-part_2(main_input_2)
+# part_2(sample_input_1)
+part_2(main_input)
+# part_2(main_input_2)
