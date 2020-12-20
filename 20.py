@@ -269,15 +269,14 @@ def part_1(raw_input):
     right_match_guide = get_right_match_guide(all_tiles)
     down_match_guide = get_down_match_guide(all_tiles)
     same_id_guide = get_same_id_guide(all_tiles)
-    print(same_id_guide[0])
     spf = SolutionPathFinder(initial_states=[tuple()], successor_fn=get_successors, is_goal_fn=is_goal)
     ss = spf.find_solution()
-    print(ss)
+    # print(ss)
     solution_tiles = []
     for i in ss:
         id, tile = all_tiles[i]
         # print(id)
-        pprint(tile)
+        # pprint(tile)
         solution_tiles.append(tile)
     answer = 1
     for i in (ss[0], ss[s - 1], ss[-s], ss[-1]):
@@ -313,19 +312,21 @@ def part_1(raw_input):
     # for row in grid:
     #     print(''.join(row))
     grid = tuple(''.join(row) for row in grid)
-    grid = get_rotated_tile(get_horizontally_flipped_tile(grid), 1)
-    serpent_mask = set()
-    pounds_count = sum(1 for i in range(u) for j in range(u) if grid[i][j] == '#')
+    all_grid_rotations = get_all_eight_tiles(grid)
+    for grid in all_grid_rotations:
+        serpent_mask = set()
+        pounds_count = sum(1 for i in range(u) for j in range(u) if grid[i][j] == '#')
 
-    for i in range(u - sm_h):
-        for j in range(u - sm_w):
-            if all(grid[i + k][j + l] == '#' for k, l in sm_squares()):
-                print(f'serpent found at {i}, {j}')
-                for k, l in sm_squares():
-                    serpent_mask.add((i + k, j + l))
+        for i in range(u - sm_h):
+            for j in range(u - sm_w):
+                if all(grid[i + k][j + l] == '#' for k, l in sm_squares()):
+                    # print(f'serpent found at {i}, {j}')
+                    for k, l in sm_squares():
+                        serpent_mask.add((i + k, j + l))
+        if serpent_mask:
+            break
 
     answer_2 = pounds_count - len(serpent_mask)
-    print(pounds_count)
     print(f'Part2: {answer_2}')
 
 
