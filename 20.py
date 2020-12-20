@@ -10,6 +10,9 @@ from collections import Counter
 
 
 class SolutionPathFinder(object):
+    """
+    taken from the projecteuler library I made
+    """
     def __init__(self, initial_states, successor_fn, is_goal_fn, is_goal_impossible_fn=lambda x: False):
         self.states_to_explore = initial_states
         self.successor_fn = successor_fn
@@ -223,6 +226,24 @@ def pprint(tile):
     print()
 
 
+sm = [
+    '                  # ',
+    '#    ##    ##    ###',
+    ' #  #  #  #  #  #   '
+]
+
+
+sm_w = len(sm[0])
+sm_h = len(sm)
+
+
+def sm_squares():
+    for i in range(len(sm)):
+        for j in range(len(sm[0])):
+            if sm[i][j] == '#':
+                yield i, j
+
+
 def part_1(raw_input):
     def get_successors(state):
         if not state:
@@ -252,14 +273,60 @@ def part_1(raw_input):
     spf = SolutionPathFinder(initial_states=[tuple()], successor_fn=get_successors, is_goal_fn=is_goal)
     ss = spf.find_solution()
     print(ss)
+    solution_tiles = []
     for i in ss:
         id, tile = all_tiles[i]
-        print(id)
+        # print(id)
         pprint(tile)
+        solution_tiles.append(tile)
     answer = 1
     for i in (ss[0], ss[s - 1], ss[-s], ss[-1]):
         answer *= all_tiles[i][0]
     print(f'Part1: {answer}')
+
+    t = len(solution_tiles[0]) - 2
+    u = s * t   #  + 2
+    grid = [['.'] * u for _ in range(u)]
+    grid[0][0] = solution_tiles[0][0][0]
+    grid[0][-1] = solution_tiles[s - 1][0][-1]
+    grid[-1][0] = solution_tiles[-s][-1][0]
+    grid[-1][-1] = solution_tiles[-1][-1][-1]
+    for h in range(len(solution_tiles)):
+        i, j = h // s, h % s
+        # if i == 0:
+        #     for k in range(t):
+        #         grid[0][1 + t * j + k] = solution_tiles[h][0][1 + k]
+        # if i == s - 1:
+        #     for k in range(t):
+        #         grid[-1][1 + t * j + k] = solution_tiles[h][-1][1 + k]
+        # if j == 0:
+        #     for k in range(t):
+        #         grid[1 + t * i + k][0] = solution_tiles[h][1 + k][0]
+        # if j == s - 1:
+        #     for k in range(t):
+        #         grid[1 + t * i + k][-1] = solution_tiles[h][1 + k][-1]
+        for k in range(t):
+            for l in range(t):
+                new_val = solution_tiles[h][1 + k][1 + l]
+                # grid[1 + t * i + k][1 + t * j + l] = new_val
+                grid[t * i + k][t * j + l] = new_val
+    # for row in grid:
+    #     print(''.join(row))
+    grid = tuple(''.join(row) for row in grid)
+    grid = get_rotated_tile(get_horizontally_flipped_tile(grid), 1)
+    serpent_mask = set()
+    pounds_count = sum(1 for i in range(u) for j in range(u) if grid[i][j] == '#')
+
+    for i in range(u - sm_h):
+        for j in range(u - sm_w):
+            if all(grid[i + k][j + l] == '#' for k, l in sm_squares()):
+                print(f'serpent found at {i}, {j}')
+                for k, l in sm_squares():
+                    serpent_mask.add((i + k, j + l))
+
+    answer_2 = pounds_count - len(serpent_mask)
+    print(pounds_count)
+    print(f'Part2: {answer_2}')
 
 
 def part_2(raw_input):
