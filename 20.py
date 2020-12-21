@@ -284,7 +284,7 @@ def part_1(raw_input):
     print(f'Part1: {answer}')
 
     t = len(solution_tiles[0]) - 2
-    u = s * t   #  + 2
+    u = s * t
     grid = [['.'] * u for _ in range(u)]
     grid[0][0] = solution_tiles[0][0][0]
     grid[0][-1] = solution_tiles[s - 1][0][-1]
@@ -292,25 +292,10 @@ def part_1(raw_input):
     grid[-1][-1] = solution_tiles[-1][-1][-1]
     for h in range(len(solution_tiles)):
         i, j = h // s, h % s
-        # if i == 0:
-        #     for k in range(t):
-        #         grid[0][1 + t * j + k] = solution_tiles[h][0][1 + k]
-        # if i == s - 1:
-        #     for k in range(t):
-        #         grid[-1][1 + t * j + k] = solution_tiles[h][-1][1 + k]
-        # if j == 0:
-        #     for k in range(t):
-        #         grid[1 + t * i + k][0] = solution_tiles[h][1 + k][0]
-        # if j == s - 1:
-        #     for k in range(t):
-        #         grid[1 + t * i + k][-1] = solution_tiles[h][1 + k][-1]
         for k in range(t):
             for l in range(t):
                 new_val = solution_tiles[h][1 + k][1 + l]
-                # grid[1 + t * i + k][1 + t * j + l] = new_val
                 grid[t * i + k][t * j + l] = new_val
-    # for row in grid:
-    #     print(''.join(row))
     grid = tuple(''.join(row) for row in grid)
     all_grid_rotations = get_all_eight_tiles(grid)
     for grid in all_grid_rotations:
