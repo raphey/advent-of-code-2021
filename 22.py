@@ -90,7 +90,10 @@ def part_1(raw_input):
 
 
 def part_2(raw_input):
+    gfs_cache = {}
     def get_final_state(initial_state, depth):
+        if initial_state in gfs_cache:
+            return gfs_cache[initial_state]
         seen = set()
         p1, p2 = initial_state
         while p1 and p2:
@@ -119,6 +122,7 @@ def part_2(raw_input):
             else:
                 p1 = p1_rest
                 p2 = p2_rest + (p2_card, p1_card)
+        gfs_cache[initial_state] = (p1, p2)
         return p1, p2
 
     p1, p2 = get_parsed(raw_input)
