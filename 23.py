@@ -128,7 +128,7 @@ def part_2(raw_input):
     cups_dict[cups_tuple[-1]] = cups_tuple[0]
     current_state = cups_tuple[0], cups_dict
     for i in range(big_2):
-        if i % 10000 == 0: print(i)
+        if i % 100000 == 0: print(i)
         # print(i, get_two_key_cups(current_state), current_state)
         current_state = get_next_state(current_state)
     # print(i, get_two_key_cups(current_state), current_state)
@@ -138,8 +138,8 @@ def part_2(raw_input):
 
 
 # part_1(sample_input_0)
-# part_1(main_input)
+part_1(main_input)
 
 # part_2_old(sample_input_0)
-part_2(sample_input_0)
+# part_2(sample_input_0)
 part_2(main_input)
