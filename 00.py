@@ -1,6 +1,6 @@
 from utils.utils_25 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
 from utils.utils_25 import memo
-from inputs.input_xx import main_input
+from inputs.input_00 import main_input
 
 from itertools import combinations, permutations
 import copy
@@ -17,7 +17,6 @@ def get_parsed(raw_input):
         parsed_item = raw_item
         parsed.append(parsed_item)
     return parsed
-
 
 def part_1(raw_input):
     parsed = get_parsed(raw_input)
