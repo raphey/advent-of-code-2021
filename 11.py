@@ -1,5 +1,6 @@
 from utils.utils_25 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
 from utils.utils_25 import memo
+from utils.utils_25 import get_eight_neighbor_indices
 from inputs.input_11 import main_input
 
 from itertools import combinations, permutations
@@ -74,7 +75,7 @@ def part_1(raw_input):
         while flash_queue:
             flash_i, flash_j = flash_queue.pop()
             flashes += 1
-            for i, j in get_neighbor_indices(octo_grid, flash_i, flash_j):
+            for i, j in get_eight_neighbor_indices(octo_grid, flash_i, flash_j):
                 octo_grid[i][j] += 1
                 if octo_grid[i][j] > 9 and (i, j) not in flash_queued:
                     flash_queue.append((i, j))
@@ -113,7 +114,7 @@ def part_2(raw_input):
         while flash_queue:
             flash_i, flash_j = flash_queue.pop()
             flashes += 1
-            for i, j in get_neighbor_indices(octo_grid, flash_i, flash_j):
+            for i, j in get_eight_neighbor_indices(octo_grid, flash_i, flash_j):
                 octo_grid[i][j] += 1
                 if octo_grid[i][j] > 9 and (i, j) not in flash_queued:
                     flash_queue.append((i, j))

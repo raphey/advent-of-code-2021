@@ -60,68 +60,15 @@ def get_raw_items(raw_input, split_token='\n'):
     return raw_items
 
 
-class GameConsole(object):
-    def __init__(self, commands):
-        self.commands = commands
-        self.accumulator = 0
-        self.i = 0
-        self.visited = set()
-        self.command_dict = {
-            'acc': self.acc,
-            'jmp': self.jmp,
-            'nop': self.nop,
-        }
-
-    def acc(self, x):
-        self.accumulator += x
-        self.i += 1
-
-    def jmp(self, x):
-        self.i += x
-
-    def nop(self, _):
-        self.i += 1
-
-    def should_terminate(self):
-        return self.i in self.visited
-
-    def execute_one_command(self):
-        self.visited.add(self.i)
-        command, amount = self.commands[self.i]
-        self.command_dict[command](amount)
-
-    def get_exit_code(self):
-        return 0
-
-    def execute(self):
-        while not self.should_terminate():
-            self.execute_one_command()
-        return self.get_exit_code()
+def get_four_neighbor_indices(grid, i, j):
+    i_max = len(grid) - 1
+    j_max = len(grid[0]) - 1
+    return [(ii, jj) for ii, jj in ((i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1))
+            if 0 <= ii <= i_max and 0 <= jj <= j_max]
 
 
-class TweakedGameConsole(GameConsole):
-    def __init__(self, commands, tweak_j):
-        super(TweakedGameConsole, self).__init__(commands)
-        self.tweak_j = tweak_j
-
-    def should_terminate(self):
-        return self.i in self.visited or self.i >= len(self.commands)
-
-    def execute_one_command(self):
-        self.visited.add(self.i)
-        command, amount = self.commands[self.i]
-        if self.i == self.tweak_j:
-            if command == 'jmp':
-                command = 'nop'
-            elif command == 'nop':
-                command = 'jmp'
-        self.command_dict[command](amount)
-
-    def get_exit_code(self):
-        return 0 if self.i >= len(self.commands) else 1
-
-
-class GameConsoleSwitch(object):
-    def __init__(self, commands):
-        super(GameConsoleSwitch, self).__init__(commands)
-
+def get_eight_neighbor_indices(grid, i, j):
+    i_max = len(grid) - 1
+    j_max = len(grid[0]) - 1
+    return [(ii, jj) for jj in range(j - 1, j + 2) for ii in range(i - 1, i + 2)
+            if 0 <= ii <= i_max and 0 <= jj <= j_max and (ii, jj) != (i, j)]
