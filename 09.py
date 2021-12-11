@@ -1,62 +1,105 @@
-from utils.utils_09 import gen_raw_items, get_regex_search, get_regex_findall, regex, translate
-from utils.utils_09 import GameConsole, TweakedGameConsole
+from utils.utils_25 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
+from utils.utils_25 import memo
 from inputs.input_09 import main_input
 
-from itertools import combinations
+from itertools import combinations, permutations
+import copy
 import re
+from collections import Counter
 
 
-def gen_parsed(raw_input):
-    for raw_item in gen_raw_items(raw_input, split_token='\n'):
-        yield int(raw_item)
+sample_input = """2199943210
+3987894921
+9856789892
+8767896789
+9899965678"""
 
 
-def part_1(raw_input, preamble=5):
-    all_numbers = list(gen_parsed(raw_input))
-    for i in range(preamble, len(all_numbers)):
-        x = all_numbers[i]
-        if x not in [a + b for a, b in combinations(all_numbers[i-preamble:i], 2)]:
-            answer = x
-            break
+def get_parsed(raw_input):
+    parsed = []
+    for raw_item in get_raw_items(raw_input, split_token='\n'):
+        parsed_item = [int(x) for x in raw_item]
+        parsed.append(parsed_item)
+    return parsed
+
+
+def get_neighbors(grid, i, j):
+    neighbors = []
+    if i > 0:
+        neighbors += [grid[i - 1][j]]
+    if i < len(grid) - 1:
+        neighbors += [grid[i + 1][j]]
+    if j > 0:
+        neighbors += [grid[i][j - 1]]
+    if j < len(grid[0]) - 1:
+        neighbors += [grid[i][j + 1]]
+    return neighbors
+
+
+def get_neighbor_indices(grid, i, j):
+    neighbors = []
+    if i > 0:
+        neighbors += [(i - 1, j)]
+    if i < len(grid) - 1:
+        neighbors += [(i + 1, j)]
+    if j > 0:
+        neighbors += [(i, j - 1)]
+    if j < len(grid[0]) - 1:
+        neighbors += [(i, j + 1)]
+    return neighbors
+
+
+def part_1(raw_input):
+    parsed = get_parsed(raw_input)
+    answer = 0
+    for i in range(len(parsed)):
+        for j in range(len(parsed[0])):
+            value = parsed[i][j]
+            if all(neighbor > value for neighbor in get_neighbors(parsed, i, j)):
+                print ('low point')
+                answer += (1 + value)
     print(f'Part1: {answer}')
 
 
-def part_2(raw_input, target=127):
-    all_numbers = list(gen_parsed(raw_input))
-    for q in range(2, 50):
-        for i in range(len(all_numbers) - (q - 1)):
-            if sum(all_numbers[i:i+q]) == target:
-                answer = min(all_numbers[i:i+q]) + max(all_numbers[i:i+q])
+def get_basin(grid, lp):
+    basin = set()
+    to_explore = [lp]
+    explored = set()
+    while to_explore:
+        ii, jj = to_explore.pop()
+        basin.add((ii, jj))
+        explored.add((ii, jj))
+        value = grid[ii][jj]
+        successors = [(i, j) for i, j in get_neighbor_indices(grid, ii, jj) if 9 > grid[i][j] > value]
+        for s in successors:
+            if s not in explored:
+                to_explore.append(s)
+    return basin
+
+
+def part_2(raw_input):
+    parsed = get_parsed(raw_input)
+    low_points = []
+    for i in range(len(parsed)):
+        for j in range(len(parsed[0])):
+            value = parsed[i][j]
+            if all(neighbor > value for neighbor in get_neighbors(parsed, i, j)):
+                low_points.append((i, j))
+    basins = []
+    for lp in low_points:
+        basins.append(get_basin(parsed, lp))
+    print(basins)
+    basins.sort(key=len)
+    basins.reverse()
+    answer = 1
+    print(basins)
+    for b in basins[:3]:
+        answer *= len(b)
     print(f'Part2: {answer}')
 
 
-sample_input = """35
-20
-15
-25
-47
-40
-62
-55
-65
-95
-102
-117
-150
-182
-127
-219
-299
-277
-309
-576"""
-
-
 part_1(sample_input)
-part_1(main_input, 25)
+part_1(main_input)
 
-
-sample_input_2 = sample_input
-
-part_2(sample_input_2)
-part_2(main_input, 675280050)
+part_2(sample_input)
+part_2(main_input)

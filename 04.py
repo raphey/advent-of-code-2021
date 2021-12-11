@@ -1,58 +1,110 @@
-from inputs.input_04 import sample_input, main_input, valid_passports, invalid_passports
+from utils.utils_25 import get_raw_items, get_regex_search, get_regex_findall, regex, translate
+from utils.utils_25 import memo
+from inputs.input_04 import main_input
 
-# Messy, trying for speed (30m)
+from itertools import combinations
+import copy
+import re
+from collections import Counter
+
+
+def strip_int(x):
+    if x[0] == ' ':
+        return int(x[1:])
+    return int(x)
+
+def get_parsed(raw_input):
+    parsed = []
+    for raw_item in get_raw_items(raw_input, split_token='\n\n'):
+        parsed_item = raw_item
+        parsed.append(parsed_item)
+    print(parsed[0])
+    numbers = [int(x) for x in parsed[0].split(',')]
+    boards = [[[strip_int(x) for x in line.split()] for line in chunk.split('\n')] for chunk in parsed[1:]]
+    return numbers, boards
+
+
+sample_input = """7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1
+
+22 13 17 11  0
+ 8  2 23  4 24
+21  9 14 16  7
+ 6 10  3 18  5
+ 1 12 20 15 19
+
+ 3 15  0  2 22
+ 9 18 13 17  5
+19  8  7 25 23
+20 11 10 24  4
+14 21 16 12  6
+
+14 21 17 24  4
+10 16 15  9 19
+18  8 23 26 20
+22 11 13  6  5
+ 2  0 12  3  7"""
+
+
+def check_for_bingo(board):
+    for i in range(len(board[0])):
+        if all(x == "X" for x in board[i]):
+            return True
+    for j in range(len(board)):
+        if all(row[j] == "X" for row in board):
+            return True
+    return False
 
 
 def part_1(raw_input):
-    passports = [dict(keyval.split(':') for keyval in passport.split()) for passport in raw_input.split('\n\n')]
-    required_fields = [
-        'byr',
-        'iyr',
-        'eyr',
-        'hgt',
-        'hcl',
-        'ecl',
-        'pid',
-        # 'cid',    # not required
-    ]
-    return len([p for p in passports if all(k in p for k in required_fields)])
+    numbers, boards = get_parsed(raw_input)
+    board_sums = [sum(sum(line) for line in b) for b in boards]
+    print(board_sums)
+    print(numbers)
+    print(boards)
+    answer = 0
+    for x in numbers:
+        for k in range(len(boards)):
+            b = boards[k]
+            for i in range(len(b)):
+                for j in range(len(b[0])):
+                    if b[i][j] == x:
+                        b[i][j] = 'X'
+                        board_sums[k] -= x
+            if check_for_bingo(boards[k]):
+                print("bingo!")
+                answer = board_sums[k] * x
+                print(f'Part1: {answer}')
+                return
 
-
-validation_fns = {
-        'byr': lambda x: len(x) == 4 and 1920 <= int(x) <= 2002,
-        'iyr': lambda x: len(x) == 4 and 2010 <= int(x) <= 2020,
-        'eyr': lambda x: len(x) == 4 and 2020 <= int(x) <= 2030,
-        'hgt': lambda x: (x[-2:] == 'cm' and 150 <= int(x[:-2]) <= 193) or (x[-2:] == 'in' and 59 <= int(x[:-2]) <= 76),
-        'hcl': lambda x: x[0] == '#' and all(d in '1234567890abcdef' for d in x[1:]),
-        'ecl': lambda x: x in {'amb', 'blu', 'brn', 'gry', 'grn', 'hzl', 'oth'},
-        'pid': lambda x: len(x) == 9 and all(d in '1234567890' for d in x),
-        # 'cid',    # not required
-    }
-
-
-def is_passport_valid(passport_dict):
-    return all(field in passport_dict and fn(passport_dict[field]) for field, fn in validation_fns.items())
+    print(f'Part1: no answer')
 
 
 def part_2(raw_input):
-    passports = [dict(keyval.split(':') for keyval in passport.split()) for passport in raw_input.split('\n\n')]
-    print(f'total number of passports: {len(passports)}')
-    return len([p for p in passports if is_passport_valid(p)])
+    numbers, boards = get_parsed(raw_input)
+    board_sums = [sum(sum(line) for line in b) for b in boards]
+    print(board_sums)
+    print(numbers)
+    print(boards)
+    answer = 0
+    for x in numbers:
+        for k in range(len(boards)):
+            b = boards[k]
+            for i in range(len(b)):
+                for j in range(len(b[0])):
+                    if b[i][j] == x:
+                        b[i][j] = 'X'
+                        board_sums[k] -= x
+            if all(check_for_bingo(b) for b in boards):
+                print("final bingo!")
+                answer = board_sums[k] * x
+                print(f'Part2: {answer}')
+                return
 
 
-def print_validity(raw_input):
-    passports = [dict(keyval.split(':') for keyval in passport.split()) for passport in raw_input.split('\n\n')]
-    print([is_passport_valid(p) for p in passports])
+part_1(sample_input)
+part_1(main_input)
 
+part_2(sample_input)
+part_2(main_input)
 
-print(part_1(sample_input))
-print(part_1(main_input))
-
-
-print_validity(valid_passports)
-print_validity(invalid_passports)
-
-
-print(part_2(sample_input))
-print(part_2(main_input))
 
