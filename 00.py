@@ -18,6 +18,7 @@ def get_parsed(raw_input):
         parsed.append(parsed_item)
     return parsed
 
+
 def part_1(raw_input):
     parsed = get_parsed(raw_input)
     answer = 0
