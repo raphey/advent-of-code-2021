@@ -8,10 +8,11 @@ import re
 from collections import Counter
 
 
-sample_input = """D2FE28"""
-sample_input = "8A004A801A8002F478"  # confusing
+sample_input = """D2FE28"""  # 6
+sample_input = "8A004A801A8002F478"  # 16
+sample_input = "620080001611562C8802118E34"
 sample_input = "C0015000016115A2E0802F182340"
-# sample_input = "620080001611562C8802118E34"
+sample_input = "A0016C880162017C3686B18A3D4780"
 
 
 
@@ -27,85 +28,174 @@ def get_packet_version_and_type(packet):
     return int(packet[:3], 2), int(packet[3:6], 2)
 
 
-def get_subpacket_string_and_end_info(packet):
-    assert int(packet[3:6], 2) != 4
-    if packet[6] == "0":
-        num_length_bits = 15
-        length = int(packet[7:7 + num_length_bits], 2)
-        return packet[7 + num_length_bits: 7 + num_length_bits + length], None, packet[7 + num_length_bits + length:]
-    else:
-        num_length_bits = 11
-        num_packets = int(packet[7:7 + num_length_bits], 2)
-        return packet[7 + num_length_bits:], num_packets, None
+class Packet:
+    def __init__(self, bits):
+        self.version, self.type = get_packet_version_and_type(bits)
+        self.bits = bits
+        self.subpackets = []
+
+    def get_remainder(self):
+        raise NotImplemented
+
+    def get_version_total(self):
+        raise NotImplemented
+
+    def evaluate(self):
+        raise NotImplemented
+
+    def __repr__(self):
+        return str((self.version, self.type, self.bits, self.subpackets))
 
 
-def parse_literal_packet(packet_string):
-    version, type = get_packet_version_and_type(packet_string)
-    assert type == 4
-    concat = ""
-    i = 6
-    while True:
-        lead, rest = packet_string[i], packet_string[i + 1: i + 5]
-        i += 5
-        concat += rest
-        if lead == "0":
-            break
-    remainder = packet_string[i:]
-    if len(remainder) < 6:
-        remainder = ""
-    return version, int(concat, 2), remainder
+class ValuePacket(Packet):
+    def __init__(self, bits):
+        super().__init__(bits)
+        assert self.type == 4
+        self.value_bits = list(self.generate_value_bits())
+
+    def generate_value_bits(self):
+        i = 6
+        while True:
+            lead_bit, value_bits = self.bits[i], self.bits[i + 1: i + 5]
+            yield value_bits
+            i += 5
+            if lead_bit == "0":
+                break
+
+    def get_remainder(self):
+        remainder_start = 6 + 5 * len(self.value_bits)
+        remainder = self.bits[remainder_start:]
+        if len(remainder) < 11:
+            remainder = ""
+        return remainder
+
+    def get_version_total(self):
+        return self.version
+
+    def evaluate(self):
+        return int(''.join(self.value_bits), 2)
 
 
-def parse_nonliteral_packet(packet_string):
-    version, type = get_packet_version_and_type(packet_string)
-    assert type != 4
-    version_total = version
-    value_total = 0
-    print(f"***nonliteral call on {packet_string}")
-    print(version_total, value_total)
-    subpacket_string, end_info, remainder = get_subpacket_string_and_end_info(packet_string)
-    if end_info is None:
-        sub_version_total, sub_value_total = parse(subpacket_string)
-        # still could be a remainder
-        version_total += sub_version_total
-        value_total += sub_value_total
-    else:
-        for j in range(end_info):
-            sub_version_total, sub_value_total, remainder = parse_one(subpacket_string)
-            version_total += sub_version_total
-            value_total += sub_value_total
-            subpacket_string = remainder
-    print(f"nonliteral call on {packet_string} returning {(version_total, value_total, remainder)}")
-    return version_total, value_total, remainder
+class OperatorPacket(Packet):
+    def __init__(self, bits):
+        super().__init__(bits)
+        assert self.type != 4
+        self.length_type = bits[6]
+        self.remainder = None
+        self.set_subpackets_lti_zero() if self.length_type == "0" else self.set_subpackets_lti_one()
+
+    def get_remainder(self):
+        return self.remainder
+
+    def set_subpackets_lti_zero(self):
+        subpacket_bit_count = int(self.bits[7:22], 2)
+        to_parse = self.bits[22: 22 + subpacket_bit_count:]
+        print(to_parse)
+        # print('to parse:', to_parse)
+        while len(to_parse) >= 11:
+            subpacket = get_packet(to_parse)
+            to_parse = subpacket.get_remainder()
+            self.subpackets.append(subpacket)
+        self.remainder = self.bits[22 + subpacket_bit_count:]
+        if len(self.remainder) < 11:
+            self.remainder = ""
+
+    def set_subpackets_lti_one(self):
+        subpacket_count = int(self.bits[7:18], 2)
+        to_parse = self.bits[18:]
+        for i in range(subpacket_count):
+            subpacket = get_packet(to_parse)
+            to_parse = subpacket.get_remainder()
+            self.subpackets.append(subpacket)
+        self.remainder = to_parse
+        if len(self.remainder) < 11:
+            self.remainder = ""
+
+    def get_remainder(self):
+        return self.remainder
+
+    def get_version_total(self):
+        return self.version + sum(sp.get_version_total() for sp in self.subpackets)
+
+    def evaluate(self):
+        raise NotImplemented
 
 
-def parse_one(packet_string):
-    if len(packet_string) < 11:
-        return 0, 0, ""
-    _, type = get_packet_version_and_type(packet_string)
-    if type == 4:
-        version_total, value_total, remainder = parse_literal_packet(packet_string)
-    else:
-        version_total, value_total, remainder = parse_nonliteral_packet(packet_string)
-    return version_total, value_total, remainder
+class SumPacket(OperatorPacket):
+    def evaluate(self):
+        return sum(sp.evaluate() for sp in self.subpackets)
 
 
-def parse(packet_string):
-    print('parsing:', packet_string)
-    if len(packet_string) < 11:
-        return 0, 0
-    version_total, value_total, remainder = parse_one(packet_string)
-    print(f"parsed one off {packet_string}, now: {(version_total, value_total, remainder)}")
-    if remainder:
-        subversion_total, subvalue_total = parse(remainder)
-        version_total += subversion_total
-        value_total += subvalue_total
-    return version_total, value_total
+class ProductPacket(OperatorPacket):
+    def evaluate(self):
+        product = 1
+        for sp in self.subpackets:
+            product *= sp.evaluate()
+        return product
 
 
-# print(parse("110100101111111000101000"))
-# print(parse("0101001000100100"))
-# print(parse("00111000000000000110111101000101001010010001001000000000"))
+class MinimumPacket(OperatorPacket):
+    def evaluate(self):
+        return min(sp.evaluate() for sp in self.subpackets)
+
+
+class MaximumPacket(OperatorPacket):
+    def evaluate(self):
+        return max(sp.evaluate() for sp in self.subpackets)
+
+
+class GreaterThanPacket(OperatorPacket):
+    def evaluate(self):
+        v1 = self.subpackets[0].evaluate()
+        v2 = self.subpackets[1].evaluate()
+        return int(v1 > v2)
+
+
+class LessThanPacket(OperatorPacket):
+    def evaluate(self):
+        v1 = self.subpackets[0].evaluate()
+        v2 = self.subpackets[1].evaluate()
+        return int(v1 < v2)
+
+
+class EqualToPacket(OperatorPacket):
+    def evaluate(self):
+        v1 = self.subpackets[0].evaluate()
+        v2 = self.subpackets[1].evaluate()
+        return int(v1 == v2)
+
+
+def get_packet(bits):
+    # print(f"get_packet called with {bits}")
+    _, packet_type = get_packet_version_and_type(bits)
+    packet_type_list = [
+        SumPacket,
+        ProductPacket,
+        MinimumPacket,
+        MaximumPacket,
+        ValuePacket,
+        GreaterThanPacket,
+        LessThanPacket,
+        EqualToPacket
+    ]
+    return packet_type_list[packet_type](bits)
+
+
+
+vp = ValuePacket('110100101111111000101000')
+
+# print(vp)
+# print(vp.evaluate())
+
+# op = OperatorPacket('00111000000000000110111101000101001010010001001000000000')
+# print(op)
+
+# op2 = OperatorPacket('11101110000000001101010000001100100000100011000001100000')
+# print(op2)
+
+# op3 = OperatorPacket('101010000000000000101111010001111000')
+# print(op3)
+# quit()
 
 
 def part_1(raw_input):
@@ -113,16 +203,18 @@ def part_1(raw_input):
     bits = ""
     for hex_char in parsed:
         bits += str(bin(16 + int(hex_char, 16)))[3:]
-    print(bits)
-    version_total, value_total = parse(bits)
-    answer = version_total
+    packet = get_packet(bits)
+    answer = packet.get_version_total()
     print(f'Part1: {answer}')
 
 
 def part_2(raw_input):
     parsed = get_parsed(raw_input)
-
-    answer = 0
+    bits = ""
+    for hex_char in parsed:
+        bits += str(bin(16 + int(hex_char, 16)))[3:]
+    packet = get_packet(bits)
+    answer = packet.evaluate()
     print(f'Part2: {answer}')
 
 
