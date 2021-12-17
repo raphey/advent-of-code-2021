@@ -90,7 +90,7 @@ class OperatorPacket(Packet):
     def set_subpackets_lti_zero(self):
         subpacket_bit_count = int(self.bits[7:22], 2)
         to_parse = self.bits[22: 22 + subpacket_bit_count:]
-        print(to_parse)
+        # print(to_parse)
         # print('to parse:', to_parse)
         while len(to_parse) >= 11:
             subpacket = get_packet(to_parse)
