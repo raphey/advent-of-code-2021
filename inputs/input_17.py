@@ -1,0 +1,1 @@
+main_input="""target area: x=236..262, y=-78..-58"""
