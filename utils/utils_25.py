@@ -72,3 +72,10 @@ def get_eight_neighbor_indices(grid, i, j):
     j_max = len(grid[0]) - 1
     return [(ii, jj) for jj in range(j - 1, j + 2) for ii in range(i - 1, i + 2)
             if 0 <= ii <= i_max and 0 <= jj <= j_max and (ii, jj) != (i, j)]
+
+
+def prod(iterable):
+    product = 1
+    for x in iterable:
+        product *= x
+    return product

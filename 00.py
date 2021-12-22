@@ -5,7 +5,7 @@ from inputs.input_00 import main_input
 from itertools import combinations, permutations
 import copy
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 
 
 sample_input = """"""
