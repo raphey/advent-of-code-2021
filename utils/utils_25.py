@@ -1,6 +1,6 @@
 from functools import update_wrapper
 import re
-
+import heapq
 
 def decorator(d):
     """Make function d a decorator with the original function name & docstring."""
@@ -79,3 +79,36 @@ def prod(iterable):
     for x in iterable:
         product *= x
     return product
+
+
+class AstarSolutionPathFinder(object):
+    def __init__(self, initial_states, successor_fn, is_goal_fn, is_goal_impossible_fn=lambda x: False,
+                 cutoff=None):
+        heapq.heapify(initial_states)
+        self.states_to_explore = initial_states
+        self.successor_fn = successor_fn
+        self.is_goal_fn = is_goal_fn
+        self.is_goal_impossible_fn = is_goal_impossible_fn
+        self.states_explored_count = 0
+        self.states_to_explore_set = set(initial_states)
+        self.cutoff = cutoff
+
+    def find_solution(self):
+        while self.states_to_explore:
+            popped_state = heapq.heappop(self.states_to_explore)
+            # print(popped_state)
+            self.states_explored_count += 1
+            if self.is_goal_fn(popped_state):
+                return popped_state
+            if self.is_goal_impossible_fn(popped_state):
+                continue
+            if self.cutoff is None:
+                for successor_state in self.successor_fn(popped_state):
+                    if successor_state not in self.states_to_explore_set:
+                        heapq.heappush(self.states_to_explore, successor_state)
+                        self.states_to_explore_set.add(successor_state)
+            else:
+                for successor_state in list(sorted(self.successor_fn(popped_state)))[:self.cutoff]:
+                    if successor_state not in self.states_to_explore_set:
+                        heapq.heappush(self.states_to_explore, successor_state)
+                        self.states_to_explore_set.add(successor_state)
