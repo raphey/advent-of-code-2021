@@ -88,10 +88,12 @@ def part_1(raw_input):
     instructions = get_parsed(raw_input)
     answer = ""
     min_z = float('inf')
-    for i in range(11111111111111, 10**14):
+
+    for i in range(899999979139, 0, -1):   # try 98 for 4th to last and 3rd to last digit
         str_i = str(i)
         if '0' in str_i:
             continue
+        str_i = str_i[:-2] + '98' + str_i[-2:] #  + '1'
         inputs = [int(d) for d in str_i]
         assert len(inputs) == 14
         alu = ALU()
@@ -101,7 +103,8 @@ def part_1(raw_input):
             else:
                 getattr(alu, inst[0])(inst[1], inst[2])
         if alu.z == 0:
-            print(str_i)
+            answer = str_i
+            break
         else:
             if alu.z < min_z:
                 print(str_i, alu.z)
