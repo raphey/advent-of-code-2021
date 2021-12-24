@@ -6,6 +6,7 @@ from itertools import combinations, permutations
 import copy
 import re
 from collections import Counter, defaultdict
+from random import sample, randint
 
 
 sample_input = """inp w
@@ -84,16 +85,21 @@ class ALU:
         return self.z == 0
 
 
+def get_mutated(start_str, k):
+    new_str = start_str
+    for i in sample(range(13), k):
+        new_str = new_str[:i + 1] + str(randint(1, 9)) + new_str[i + 2:]  # keep leading 8
+    return new_str
+
 def part_1(raw_input):
     instructions = get_parsed(raw_input)
     answer = ""
-    min_z = float('inf')
-
-    for i in range(899999979139, 0, -1):   # try 98 for 4th to last and 3rd to last digit
-        str_i = str(i)
-        if '0' in str_i:
-            continue
-        str_i = str_i[:-2] + '98' + str_i[-2:] #  + '1'
+    current_best_str = "89999997919839"
+    min_z = 407
+    for i in range(10000):
+        str_i = get_mutated(current_best_str, 4)
+        # if '0' in str_i:
+        #     continue
         inputs = [int(d) for d in str_i]
         assert len(inputs) == 14
         alu = ALU()
@@ -108,7 +114,6 @@ def part_1(raw_input):
         else:
             if alu.z < min_z:
                 print(str_i, alu.z)
-                min_z = alu.z
     print(f'Part1: {answer}')
 
 
