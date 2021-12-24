@@ -83,13 +83,12 @@ def part_1(raw_input):
     instructions = get_parsed(raw_input)
     answer = ""
     min_z = float('inf')
-    for i in range(10**12 - 1, 0, -1):   # try 98 for 4th to last and 3rd to last digit
-        str_i = str(i)
-        if '0' in str_i:
-            continue
-        str_i = str_i[:-2] + '98' + str_i[-2:]
-        inputs = [int(d) for d in str_i]
-        assert len(inputs) == 14
+    start_value = '19999997919839'
+    start_inputs = [int(d) for d in start_value]
+    for i in range(6):
+        inputs = start_inputs[:]
+        inputs[i] -= 1
+        str_i = ''.join(str(x) for x in inputs)
         alu = ALU()
         for inst in instructions:
             if inst[0] == "inp":
