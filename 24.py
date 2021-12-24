@@ -33,8 +33,13 @@ def get_reversed_instructions(instructions):
     rev_inst = [("inp", "z", 0)]
     for inst in instructions[::-1]:
         if inst[0] == "add":
-            pass
-
+            rev_inst.append(("sub",) + inst[1:])
+        if inst[0] == "sub":
+            rev_inst.append(("add",) + inst[1:])
+        if inst[0] == "mul":
+            rev_inst.append(("div",) + inst[1:])
+        if inst[0] == "div":
+            rev_inst.append(("mul",) + inst[1:])
 
 class ALU:
     def __init__(self):
@@ -83,12 +88,14 @@ def part_1(raw_input):
     instructions = get_parsed(raw_input)
     answer = ""
     min_z = float('inf')
-    start_value = '19999997919839'
-    start_inputs = [int(d) for d in start_value]
-    for i in range(6):
-        inputs = start_inputs[:]
-        inputs[i] -= 1
-        str_i = ''.join(str(x) for x in inputs)
+    str_i = '99999997919839'
+    for i in range(199999979139, 0, -1):   # try 98 for 4th to last and 3rd to last digit
+        str_i = str(i)
+        if '0' in str_i:
+            continue
+        str_i = str_i[:-2] + '98' + str_i[-2:]
+        inputs = [int(d) for d in str_i]
+        assert len(inputs) == 14
         alu = ALU()
         for inst in instructions:
             if inst[0] == "inp":
